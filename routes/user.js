@@ -52,4 +52,34 @@ router.get("/list", function (req, res) {
 })
 
 
+router.get("/login",function(req,res){
+    res.render("login");
+})
+
+// 登录功能
+router.post("/login",function(req,res){
+
+    var username = req.body.username;
+    var password = req.body.password;
+
+    // 临时验证 doto
+    var pass = false;
+    global.users.forEach(function(user){
+        if(username === user.username && password === user.password){
+            pass = true;
+        }
+    })
+
+    if(pass){
+        res.send("登录成功！");
+        // session
+    }else{
+
+
+        res.render("login",{error:true});
+
+    }
+
+})
+
 module.exports = router;
