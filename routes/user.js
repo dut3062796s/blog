@@ -2,12 +2,13 @@ var express = require('express');
 var router = express.Router();
 var validator = require("validator");
 var uid = require("shortid");
+var User = require("../model/User");
 
-global.users = [];
+//global.users = [];
 
 /* GET users listing. */
 router.get('/', function (req, res) {
-    res.send('respond with a resource');
+    res.render('index',{user:req.session.user || {}});
 });
 
 // 注册
@@ -35,20 +36,20 @@ router.post("/reg", function (req, res, next) {
     if (Object.keys(errors).length > 0) {
         res.render("reg", {errors: errors});
     } else {
-        var id = uid();
-        var user = {
-            id: id,
-            username: username,
-            password: password
-        }
-        global.users.push( user);
+
+        var user = new User({username:username,password:password});
+        user.save();
         res.redirect("/user/list");
     }
 });
 
 
 router.get("/list", function (req, res) {
-    res.render("list", {users: global.users});
+
+    User.find({},function(err,result){
+        res.render("list", {users: result});
+    })
+
 })
 
 
@@ -62,23 +63,78 @@ router.post("/login",function(req,res){
     var username = req.body.username;
     var password = req.body.password;
 
-    // 临时验证 doto
-    var pass = false;
-    global.users.forEach(function(user){
-        if(username === user.username && password === user.password){
-            pass = true;
+    User.findOne({username:username,password:password},function(err,user){
+        if(user){
+
+            req.session.user = user;
+
+            res.redirect("/user");
+            // session
+        }else{
+            res.render("login",{error:true});
+
         }
     })
 
-    if(pass){
-        res.send("登录成功！");
-        // session
+
+})
+
+// 更改密码
+router.get("/uppwd", function (req,res) {
+    if(req.session.user){
+        res.render("uppwd",{user:req.session.user,errors:{}});
     }else{
-
-
-        res.render("login",{error:true});
-
+        res.render("login");
     }
+});
+
+router.post("/uppwd", function (req, res) {
+
+    if(req.session.user) {
+        var oldPassword = req.body.oldPassword;
+        var newPassword =req.body.newPassword;
+        var confirm = req.body.confirm;
+
+        if(req.session.user.password === oldPassword){
+
+
+            var errors = {}
+
+            if (!validator.isLength(newPassword, 5, 10)) {
+                errors.password = "password string length >5 < 10";
+            }
+
+            if (newPassword !== confirm) {
+                errors.confirm = "confirm password must === password";
+            }
+
+            if (Object.keys(errors).length > 0) {
+                res.render("uppwd", {errors: errors});
+            } else {
+
+                User.findOne({username:req.session.user.username}, function (err,user) {
+                    user.password = newPassword;
+                    user.save();
+                    res.redirect("/user");
+                })
+
+            }
+
+            // 旧密码有问题
+        }else{
+
+            var errors = {}
+
+                errors.oldPassword = "旧密码错误";
+
+            res.render("uppwd", {errors: errors,user:req.session.user});
+
+        }
+
+    }else{
+        res.render("login");
+    }
+
 
 })
 
