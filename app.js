@@ -9,6 +9,7 @@ var session = require('express-session')
 var routes = require('./routes/index');
 // 用户相关功能
 var user = require('./routes/user');
+var article = require("./routes/article");
 
 var app = express();
 
@@ -26,6 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/user', user);
+app.use('/article', article);
 
 /// catch 404 and forward to error handler
 app.use(function(err,req, res, next) {

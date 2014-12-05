@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+</head>
+<body>
+
+<p>文章列表</p>
+
+<ul>
+    <% articles.forEach(function(article){ %>
+        <li><%=article.title%> <a href="/article/del?id=<%=article._id%>">删除</a></li>
+
+    <% }) %>
+</ul>
+</body>
+</html>
